@@ -1,0 +1,12 @@
+rm(list=ls())
+##########
+#librarías
+##########
+library(dplyr)
+library(survey)
+library(convey)
+library(srvyr)
+library(ggplot2)
+##########
+#bases
+load(url("https://github.com/AlvaroLimber/R_aru/raw/master/data/eh19.RData"))

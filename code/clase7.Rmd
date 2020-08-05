@@ -1,0 +1,108 @@
+---
+title: "Clase 7"
+author: "Alvaro Chirino Gutierrez"
+date: "Agosto, 2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+# sobre la EH19
+rm(list=ls())
+library(dplyr)
+#install.packages("survey")
+#install.packages("srvyr")
+library(survey)
+library(srvyr)
+#bases
+load(url("https://github.com/AlvaroLimber/R_aru/raw/master/data/eh19.RData"))
+```
+
+
+# Diseños muestrales en R (estimación)
+
+Existen dos librerías
+
+  * survey: orientada al código R de fuente, interactúa con otras librarías como la convey. (No trabaja con dplyr)
+  * srvyr:  Trabaja con la filosofía de dplyr 
+  
+No es el mismo que STATA... [w=], lo mas cercano a Stata es el prefijo svy...
+
+
+## Estimador de Horvitz Thompson.
+
+Parámetro del Total,
+
+$$t_y=\sum_U{y_k}$$
+
+El estimador,
+
+$$\hat{t}_y=\sum_s \frac{y_k}{\pi_k}=\sum_s {y_k*\frac{1}{\pi_k}}=\sum_s {y_k*w_k}$$
+
+En R...
+
+```{r}
+#survey
+sd1<-svydesign(ids = ~upm, strata=~estrato,weights =~factor ,data=eh19p)
+svyhist(~aestudio,design = sd1)
+hist(eh19p$aestudio)
+svymean(~aestudio,design=sd1,na.rm=T)
+t1<-svyby(~aestudio,~depto+area,design=sd1, svymean, na.rm=T,deff = T)
+table(cv(t1)>0.10)
+cv(t1)
+confint(t1)
+summary(sd1)
+
+hist(eh19p$factor)
+summary(eh19p$factor)
+quantile(eh19p$factor,c(0.05,0.1,0.9,0.95))
+#srvyr
+sd2<-as_survey_design(sd1)
+sd3<-eh19p %>% as_survey_design(ids=upm, strata=estrato, weights=factor)
+
+sd2 %>% summarise(m_aes=survey_mean(aestudio,na.rm=T))
+sd3 %>% summarise(m_aes=survey_mean(aestudio,na.rm=T))
+
+sd3 %>% filter(s02a_03>=15) %>% summarise(m_aes=survey_mean(aestudio,na.rm=T))
+
+t2<-sd3 %>% filter(s02a_03>=15) %>% group_by(depto,area) %>%  summarise(m_aes=survey_mean(aestudio,na.rm=T,deff=T,vartype=c("ci","cv","se")))
+library(knitr)
+kable(t2)
+```
+
+# Librería GGPLOT
+
+```{r,echo=FALSE}
+#install.packages("ggplot2")
+library(ggplot2)
+#install.packages("plotly")
+library(plotly)
+```
+
+  * Datos (base)
+  * aesthetics (x,y,col)
+  * Geometría (hist, boxplot, scatter, etc.)
+  
+```{r}
+ggplot(eh19p,aes(ylab))+geom_histogram()
+ggplot(eh19p,aes(ylab))+geom_boxplot()
+ggplot(eh19p,aes(aestudio))+geom_bar()
+ggplot(eh19p,aes(aestudio,weights=factor))+geom_bar()
+ggplot(eh19p %>% filter(s02a_03>=15) ,aes(aestudio,weights=factor))+geom_bar()
+
+g1<-ggplot(eh19p %>% filter(s02a_03>=15) ,aes(aestudio,weights=factor))+geom_bar()
+
+ggplotly(g1) 
+```
+
+
+
+
+
+
+
