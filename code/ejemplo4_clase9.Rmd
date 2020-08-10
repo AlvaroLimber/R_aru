@@ -1,0 +1,42 @@
+---
+title: "Untitled"
+author: "Alvaro Chirino Gutierrez"
+date: "8/8/2020"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Ejemplo en Shiny
+
+Para la función:
+
+$$y=a+bx$$
+
+```{r,echo=FALSE}
+inputPanel(
+        numericInput("a","Valor de a",1),
+        numericInput("b","Valor de b",1)
+)
+
+renderPlot({
+        gx<-function(x,a,b){
+            y<- a+b*x
+        }
+        curve(gx(x,a=input$a,b=input$b),xlim=c(-50,50),ylim=c(-50,50))
+    })
+```
+
+
+```{r tabsets, echo=FALSE,eval=T}
+shinyAppDir(
+  system.file("examples/06_tabsets", package = "shiny"),
+  options = list(
+    width = "100%", height = 550
+  )
+)
+```
+

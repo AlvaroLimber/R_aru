@@ -1,0 +1,67 @@
+---
+title: "Clase 9, Métdos Multivariados"
+author: "Alvaro Chirino Gutierrez"
+date: "8/8/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Componentes principales
+
+  * Reducir las dimensiones (100 -> 10)
+  * Eliminar completamente la colinealidad en modelos glm
+
+$$
+\begin{array}{rrr}
+Y_1     = & a_1^{'} \mathbf{X} = & a_{11} X_1 + a_{12} X_2 + \ldots a_{1p} X_p \\
+Y_2     = & a_2^{'} \mathbf{X} = & a_{21} X_1 + a_{22} X_2 + \ldots a_{2p} X_p\\
+\vdots  = & \vdots & \vdots \\
+Y_p     = & a_p^{'} \mathbf{X} = & a_{p1} X_1 + a_{p2} X_2 + \ldots a_{pp} X_p\\
+\end{array}
+$$
+Descomposición Espectral
+
+$$\Sigma = A \Delta A' $$
+$$A*A'=I=A'A$$
+$$sum(diag(\Sigma))=sum(diag(\Delta))$$
+
+$$\Sigma \approx A_r \Delta_r A_r'  $$
+
+```{r}
+library(dplyr)
+load(url("https://github.com/AlvaroLimber/EST-384/blob/master/data/oct20.RData?raw=true"))
+bd<-computo %>% filter(Elección == unique(Elección)[1])
+names(bd)
+s<-cor(bd[,14:22])
+ds<-eigen(s)
+ds$vectors
+
+cumsum(ds$values/9)
+bd<-cbind(bd,as.matrix(bd[,14:22]) %*% ds$vectors[,1:3])
+
+library(explor)
+library(FactoMineR)
+cp1<-PCA(bd[,14:22])
+explor(cp1)
+```
+
+
+# Clustering (k-center, jerárquicos)
+
+```{r}
+kc<-kmeans(bd[,14:22],4)
+bd<-cbind(bd,kc$cluster)
+names(bd)[30]<-"cluster"
+bd %>% select(14:22,cluster)  %>% group_by(cluster) %>% summarise_all(mean)
+#jerar
+s<-sample(1:34551,1000)
+d<-dist(bd[s,14:22])
+plot(hclust(d))
+rect.hclust(hclust(d),k=3)
+rect.hclust(hclust(d),k=5)
+```
